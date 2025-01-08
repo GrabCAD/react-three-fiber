@@ -1,5 +1,65 @@
 # @react-three/fiber
 
+## 7.0.29
+
+### Patch Changes
+
+- c99a175: fix native entrypoint
+
+## 7.0.28
+
+### Patch Changes
+
+- 462615e7: bump version
+
+## 7.0.27
+
+### Patch Changes
+
+- 44bb35ab: insertBefore supports attachArray
+
+## 7.0.26
+
+### Patch Changes
+
+- 13dde9b8: insertBefore supports attachArray
+
+## 7.0.25
+
+### Patch Changes
+
+- 8698734: Release latest patches
+
+## 7.0.24
+
+### Patch Changes
+
+- 7f46ddf: cleanup captured pointers when released (#1914)
+
+## 7.0.23
+
+### Patch Changes
+
+- 30d38b1: remove logs
+
+## 7.0.22
+
+### Patch Changes
+
+- 259e1fa: add camera:manual
+
+## 7.0.21
+
+### Patch Changes
+
+- 65e4147: up usemeasure, add last event to internals"
+
+## 7.0.20
+
+### Patch Changes
+
+- 54cb0fd: update react-use-measure, allow it to use the offsetSize
+
 ## 7.0.19
 
 ### Patch Changes

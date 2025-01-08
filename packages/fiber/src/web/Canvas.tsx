@@ -1,9 +1,9 @@
 import * as React from 'react'
 import mergeRefs from 'react-merge-refs'
 import useMeasure, { Options as ResizeOptions } from 'react-use-measure'
-import { render, unmountComponentAtNode, RenderProps } from './index'
+import { render, unmountComponentAtNode, RenderProps, useMemoizedFn } from './index'
 import { createPointerEvents } from './events'
-import { UseStore } from 'zustand'
+import { UseBoundStore } from 'zustand'
 import { RootState } from '../core/store'
 import { EventManager } from '../core/events'
 
@@ -13,7 +13,7 @@ export interface Props
   children: React.ReactNode
   fallback?: React.ReactNode
   resize?: ResizeOptions
-  events?: (store: UseStore<RootState>) => EventManager<any>
+  events?: (store: UseBoundStore<RootState>) => EventManager<any>
 }
 
 type SetBlock = false | Promise<null> | null
@@ -47,6 +47,7 @@ export const Canvas = React.forwardRef<HTMLCanvasElement, Props>(function Canvas
   { children, fallback, tabIndex, resize, id, style, className, events, ...props },
   forwardedRef,
 ) {
+  const onPointerMissed = useMemoizedFn(props.onPointerMissed)
   const [containerRef, { width, height }] = useMeasure({ scroll: true, debounce: { scroll: 50, resize: 0 }, ...resize })
   const canvasRef = React.useRef<HTMLCanvasElement>(null!)
   const [block, setBlock] = React.useState<SetBlock>(false)
@@ -64,10 +65,10 @@ export const Canvas = React.forwardRef<HTMLCanvasElement, Props>(function Canvas
           <React.Suspense fallback={<Block set={setBlock} />}>{children}</React.Suspense>
         </ErrorBoundary>,
         canvasRef.current,
-        { ...props, size: { width, height }, events: events || createPointerEvents },
+        { ...props, size: { width, height }, onPointerMissed, events: events || createPointerEvents },
       )
     }
-  }, [width, height, children])
+  }, [width, height, children, onPointerMissed])
 
   useIsomorphicLayoutEffect(() => {
     const container = canvasRef.current

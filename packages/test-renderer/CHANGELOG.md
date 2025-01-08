@@ -1,5 +1,77 @@
 # @react-three/test-renderer
 
+## 7.0.27
+
+### Patch Changes
+
+- 462615e7: bump version
+- Updated dependencies [462615e7]
+  - @react-three/fiber@7.0.28
+
+## 7.0.26
+
+### Patch Changes
+
+- 44bb35ab: insertBefore supports attachArray
+- Updated dependencies [44bb35ab]
+  - @react-three/fiber@7.0.27
+
+## 7.0.25
+
+### Patch Changes
+
+- 13dde9b8: insertBefore supports attachArray
+- Updated dependencies [13dde9b8]
+  - @react-three/fiber@7.0.26
+
+## 7.0.24
+
+### Patch Changes
+
+- 8698734: Release latest patches
+- Updated dependencies [8698734]
+  - @react-three/fiber@7.0.25
+
+## 7.0.23
+
+### Patch Changes
+
+- 7f46ddf: cleanup captured pointers when released (#1914)
+- Updated dependencies [7f46ddf]
+  - @react-three/fiber@7.0.24
+
+## 7.0.22
+
+### Patch Changes
+
+- 30d38b1: remove logs
+- Updated dependencies [30d38b1]
+  - @react-three/fiber@7.0.23
+
+## 7.0.21
+
+### Patch Changes
+
+- 259e1fa: add camera:manual
+- Updated dependencies [259e1fa]
+  - @react-three/fiber@7.0.22
+
+## 7.0.20
+
+### Patch Changes
+
+- 65e4147: up usemeasure, add last event to internals"
+- Updated dependencies [65e4147]
+  - @react-three/fiber@7.0.21
+
+## 7.0.19
+
+### Patch Changes
+
+- 54cb0fd: update react-use-measure, allow it to use the offsetSize
+- Updated dependencies [54cb0fd]
+  - @react-three/fiber@7.0.20
+
 ## 7.0.18
 
 ### Patch Changes

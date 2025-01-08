@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import * as React from 'react'
 import * as ReactThreeFiber from '../three-types'
-import create, { GetState, SetState, UseStore } from 'zustand'
+import create, { GetState, SetState, UseBoundStore } from 'zustand'
 import { prepare, Instance, InstanceProps } from './renderer'
-import { EventManager, PointerCaptureData, ThreeEvent } from './events'
+import { DomEvent, EventManager, PointerCaptureData, ThreeEvent } from './events'
 
-export interface Intersection extends THREE.Intersection {
+export interface IIntersection extends THREE.Intersection {
   eventObject: THREE.Object3D
 }
 
@@ -52,6 +52,7 @@ export type InternalState = {
   priority: number
   frames: number
   lastProps: StoreProps
+  lastEvent: React.MutableRefObject<DomEvent | null>
 
   interaction: THREE.Object3D[]
   /** The keys are pointer IDs, and the value is the first/innermost pointerover event that was delivered
@@ -59,7 +60,7 @@ export type InternalState = {
    * That is, if you have `<group name="a" onPointerOver={...}><group name="b" onPointerOver={...}><mesh /></group></group>`,
    * then the event stored here will have group b as its eventObject and the mesh as its object.
    */
-  hovered: Map<number, ThreeEvent<PointerEvent>>
+  hovered: Map<string | number, ThreeEvent<DomEvent>>
   subscribers: Subscription[]
   /** The keys are pointer IDs */
   capturedMap: Map<number, PointerCaptureData>
@@ -72,12 +73,15 @@ export type InternalState = {
 export type RootState = {
   gl: THREE.WebGLRenderer
   scene: THREE.Scene
-  camera: Camera
+  camera: Camera & { manual?: boolean }
   controls: THREE.EventDispatcher | null
   raycaster: Raycaster
   mouse: THREE.Vector2
   clock: THREE.Clock
 
+  /**
+   * @deprecated Removed in R3F v8. With R3F v8, WebXR features will automatically enable as you enter a session.
+   */
   vr: boolean
   linear: boolean
   flat: boolean
@@ -95,6 +99,7 @@ export type RootState = {
   advance: (timestamp: number, runGlobalEffects?: boolean) => void
   setSize: (width: number, height: number) => void
   setDpr: (dpr: Dpr) => void
+  setFrameloop: (frameloop?: 'always' | 'demand' | 'never') => void
   onPointerMissed?: (event: MouseEvent) => void
 
   events: EventManager<any>
@@ -102,11 +107,17 @@ export type RootState = {
 }
 
 export type FilterFunction = (items: THREE.Intersection[], state: RootState) => THREE.Intersection[]
-export type ComputeOffsetsFunction = (event: any, state: RootState) => { offsetX: number; offsetY: number }
+export type ComputeOffsetsFunction = (
+  event: any,
+  state: RootState,
+) => { offsetX: number; offsetY: number; width?: number; height?: number }
 
 export type StoreProps = {
   gl: THREE.WebGLRenderer
   size: Size
+  /**
+   * @deprecated Removed in R3F v8. With R3F v8, WebXR features will automatically enable as you enter a session.
+   */
   vr?: boolean
   shadows?: boolean | Partial<THREE.WebGLShadowMap>
   linear?: boolean
@@ -117,13 +128,14 @@ export type StoreProps = {
   dpr?: Dpr
   clock?: THREE.Clock
   raycaster?: Partial<Raycaster>
-  camera?:
+  camera?: (
     | Camera
     | Partial<
         ReactThreeFiber.Object3DNode<THREE.Camera, typeof THREE.Camera> &
           ReactThreeFiber.Object3DNode<THREE.PerspectiveCamera, typeof THREE.PerspectiveCamera> &
           ReactThreeFiber.Object3DNode<THREE.OrthographicCamera, typeof THREE.OrthographicCamera>
       >
+  ) & { manual?: boolean }
   onPointerMissed?: (event: MouseEvent) => void
 }
 
@@ -133,14 +145,14 @@ export function calculateDpr(dpr: Dpr) {
   return Array.isArray(dpr) ? Math.min(Math.max(dpr[0], window.devicePixelRatio), dpr[1]) : dpr
 }
 
-const context = React.createContext<UseStore<RootState>>(null!)
+const context = React.createContext<UseBoundStore<RootState>>(null!)
 
 const createStore = (
   applyProps: ApplyProps,
   invalidate: (state?: RootState) => void,
   advance: (timestamp: number, runGlobalEffects?: boolean, state?: RootState) => void,
   props: StoreProps,
-): UseStore<RootState> => {
+): UseBoundStore<RootState> => {
   const {
     gl,
     size,
@@ -283,15 +295,18 @@ const createStore = (
       },
       setDpr: (dpr: Dpr) => set((state) => ({ viewport: { ...state.viewport, dpr: calculateDpr(dpr) } })),
 
+      setFrameloop: (frameloop: 'always' | 'demand' | 'never' = 'always') => set(() => ({ frameloop })),
+
       events: { connected: false },
       internal: {
         active: false,
         priority: 0,
         frames: 0,
         lastProps: props,
+        lastEvent: React.createRef(),
 
         interaction: [],
-        hovered: new Map<number, ThreeEvent<PointerEvent>>(),
+        hovered: new Map<string, ThreeEvent<DomEvent>>(),
         subscribers: [],
         initialClick: [0, 0],
         initialHit: undefined,
@@ -337,7 +352,7 @@ const createStore = (
     if (size !== oldSize || viewport.dpr !== oldDpr) {
       // https://github.com/pmndrs/react-three-fiber/issues/92
       // Do not mess with the camera if it belongs to the user
-      if (!(internal.lastProps.camera instanceof THREE.Camera)) {
+      if (!camera.manual && !(internal.lastProps.camera instanceof THREE.Camera)) {
         if (isOrthographicCamera(camera)) {
           camera.left = size.width / -2
           camera.right = size.width / 2

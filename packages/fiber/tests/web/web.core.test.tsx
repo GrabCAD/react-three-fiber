@@ -22,7 +22,7 @@ import { createCanvas } from '@react-three/test-renderer/src/createTestCanvas'
 import { createWebGLContext } from '@react-three/test-renderer/src/createWebGLContext'
 
 import { render, act, unmountComponentAtNode, extend } from '../../src/web/index'
-import { UseStore } from 'zustand'
+import { UseBoundStore } from 'zustand'
 import { RootState } from '../../src/core/store'
 import { ReactThreeFiber } from '../../src'
 
@@ -355,6 +355,92 @@ describe('web core', () => {
     expect(log).toEqual(['render Foo', 'render Foo', 'mount Foo', 'unmount Foo'])
   })
 
+  it('will mount/unmount event handlers correctly', async () => {
+    let state: RootState = null!
+    let mounted = false
+    let attachEvents = false
+
+    const EventfulComponent = () => (mounted ? <group onClick={attachEvents ? () => void 0 : undefined} /> : null)
+
+    // Test initial mount without events
+    mounted = true
+    await act(async () => {
+      state = render(<EventfulComponent />, canvas).getState()
+    })
+    expect(state.internal.interaction.length).toBe(0)
+
+    // Test initial mount with events
+    attachEvents = true
+    await act(async () => {
+      state = render(<EventfulComponent />, canvas).getState()
+    })
+    expect(state.internal.interaction.length).not.toBe(0)
+
+    // Test events update
+    attachEvents = false
+    await act(async () => {
+      state = render(<EventfulComponent />, canvas).getState()
+    })
+    expect(state.internal.interaction.length).toBe(0)
+
+    attachEvents = true
+    await act(async () => {
+      state = render(<EventfulComponent />, canvas).getState()
+    })
+    expect(state.internal.interaction.length).not.toBe(0)
+
+    // Test unmount with events
+    mounted = false
+    await act(async () => {
+      state = render(<EventfulComponent />, canvas).getState()
+    })
+    expect(state.internal.interaction.length).toBe(0)
+  })
+
+  it('will create an identical instance when reconstructing', async () => {
+    let state: RootState = null!
+    const instances: { uuid: string; parentUUID?: string; childUUID?: string }[] = []
+
+    const Test = ({ n }: { n: number }) => (
+      // @ts-expect-error args isn't a valid prop but changing it will swap
+      <group args={[n]} onPointerOver={() => null}>
+        <group />
+      </group>
+    )
+
+    await act(async () => {
+      state = render(<Test n={1} />, canvas).getState()
+    })
+
+    instances.push({
+      uuid: state.scene.children[0].uuid,
+      parentUUID: state.scene.children[0].parent?.uuid,
+      childUUID: state.scene.children[0].children[0]?.uuid,
+    })
+
+    await act(async () => {
+      state = render(<Test n={2} />, canvas).getState()
+    })
+
+    instances.push({
+      uuid: state.scene.children[0].uuid,
+      parentUUID: state.scene.children[0].parent?.uuid,
+      childUUID: state.scene.children[0].children[0]?.uuid,
+    })
+
+    const [oldInstance, newInstance] = instances
+
+    // Created a new instance
+    expect(oldInstance.uuid).not.toBe(newInstance.uuid)
+
+    // Preserves scene hierarchy
+    expect(oldInstance.parentUUID).toBe(newInstance.parentUUID)
+    expect(oldInstance.childUUID).toBe(newInstance.childUUID)
+
+    // Rebinds events
+    expect(state.internal.interaction.length).not.toBe(0)
+  })
+
   it('will make an Orthographic Camera & set the position', async () => {
     let camera: Camera = null!
 
@@ -367,7 +453,7 @@ describe('web core', () => {
   })
 
   it('should handle an performance changing functions', async () => {
-    let state: UseStore<RootState> = null!
+    let state: UseBoundStore<RootState> = null!
     await act(async () => {
       state = render(<group />, canvas, {
         dpr: [1, 2],
@@ -404,7 +490,7 @@ describe('web core', () => {
   })
 
   it('should set PCFSoftShadowMap as the default shadow map', async () => {
-    let state: UseStore<RootState> = null!
+    let state: UseBoundStore<RootState> = null!
     await act(async () => {
       state = render(<group />, canvas, {
         shadows: true,
@@ -415,7 +501,7 @@ describe('web core', () => {
   })
 
   it('should set tonemapping to ACESFilmicToneMapping and outputEncoding to sRGBEncoding if linear is false', async () => {
-    let state: UseStore<RootState> = null!
+    let state: UseBoundStore<RootState> = null!
     await act(async () => {
       state = render(<group />, canvas, {
         linear: false,

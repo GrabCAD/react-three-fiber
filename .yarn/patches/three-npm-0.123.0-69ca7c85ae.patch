@@ -1,0 +1,69 @@
+diff --git a/build/three.js b/build/three.js
+index 1cf26b32e07893d0370e012310f8aaac7419ac38..27d6f95831ac894cc9c49b322ddab8458658b62f 100644
+--- a/build/three.js
++++ b/build/three.js
+@@ -5987,6 +5987,15 @@
+ 			return _v0$1.cross(_v1$3).dot(direction) < 0 ? true : false;
+ 		};
+ 
++		Triangle.getInterpolation = function getInterpolation(point, p1, p2, p3, v1, v2, v3, target) {
++			this.getBarycoord(point, p1, p2, p3, _v3);
++			target.setScalar(0);
++			target.addScaledVector(v1, _v3.x);
++			target.addScaledVector(v2, _v3.y);
++			target.addScaledVector(v3, _v3.z);
++			return target;	
++		}
++
+ 		var _proto = Triangle.prototype;
+ 
+ 		_proto.set = function set(a, b, c) {
+diff --git a/src/math/Triangle.d.ts b/src/math/Triangle.d.ts
+index ce63423aa21e4d4c8a7784340ac4a86ebd6944ef..08ea4486d3b64695a4b08de4ec8067fd73dd3b46 100644
+--- a/src/math/Triangle.d.ts
++++ b/src/math/Triangle.d.ts
+@@ -79,4 +79,14 @@ export class Triangle {
+ 		direction: Vector3
+ 	): boolean;
+ 
++	static getInterpolation(
++		point: Vector3,
++		p1: Vector3,
++		p2: Vector3,
++		p3: Vector3,
++		v1: Vector3,
++		v2: Vector3,
++		v3: Vector3,
++		target: Vector3
++	): Vector3; 
+ }
+diff --git a/src/math/Triangle.js b/src/math/Triangle.js
+index 7ad02cf7cc8c91c6f80a1ff2f43df1cde4e0e7a6..2e869d15268b407c03ce85255a2ea2a04cf8d479 100644
+--- a/src/math/Triangle.js
++++ b/src/math/Triangle.js
+@@ -320,6 +320,25 @@ class Triangle {
+ 
+ 	}
+ 
++	static getInterpolation(
++		point,
++		p1,
++		p2,
++		p3,
++		v1,
++		v2,
++		v3,
++		target
++	) {
++		Triangle.getBarycoord(point, p1, p2, p3, _v3);
++
++		target.setScalar(0);
++		target.addScaledVector(v1, _v3.x);
++		target.addScaledVector(v2, _v3.y);
++		target.addScaledVector(v3, _v3.z);
++	
++		return target;		
++	}
+ }
+ 
+ 

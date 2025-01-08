@@ -36,12 +36,13 @@ export interface NodeProps<T, P> {
   /** Constructor arguments */
   args?: Args<P>
   children?: React.ReactNode
-  ref?: React.Ref<React.ReactNode>
+  ref?: React.RefCallback<T> | React.RefObject<React.ReactNode> | null
   key?: React.Key
   onUpdate?: (self: T) => void
 }
 
-export type Node<T, P> = Overwrite<Partial<T>, NodeProps<T, P>>
+export type ExtendedColors<T> = { [K in keyof T]: T[K] extends THREE.Color | undefined ? Color : T[K] }
+export type Node<T, P> = ExtendedColors<Overwrite<Partial<T>, NodeProps<T, P>>>
 
 export type Object3DNode<T, P> = Overwrite<
   Node<T, P>,
@@ -58,10 +59,11 @@ export type Object3DNode<T, P> = Overwrite<
 > &
   EventHandlers
 
-export type BufferGeometryNode<T extends THREE.BufferGeometry, P> = Overwrite<Node<T, P>, {}>
-export type MaterialNode<T extends THREE.Material, P> = Overwrite<Node<T, P>, { color?: Color }>
-export type LightNode<T extends THREE.Light, P> = Overwrite<Object3DNode<T, P>, { color?: Color }>
+export type BufferGeometryNode<T extends THREE.BufferGeometry, P> = Node<T, P>
+export type MaterialNode<T extends THREE.Material, P> = Node<T, P>
+export type LightNode<T extends THREE.Light, P> = Object3DNode<T, P>
 
+export type Object3DProps = Object3DNode<THREE.Object3D, typeof THREE.Object3D>
 // export type AudioProps = Object3DNode<THREE.Audio, typeof THREE.Audio>
 export type AudioListenerProps = Object3DNode<THREE.AudioListener, typeof THREE.AudioListener>
 export type PositionalAudioProps = Object3DNode<THREE.PositionalAudio, typeof THREE.PositionalAudio>
@@ -80,7 +82,6 @@ export type LineLoopProps = Object3DNode<THREE.LineLoop, typeof THREE.LineLoop>
 // export type LineProps = Object3DNode<THREE.Line, typeof THREE.Line>
 export type PointsProps = Object3DNode<THREE.Points, typeof THREE.Points>
 export type GroupProps = Object3DNode<THREE.Group, typeof THREE.Group>
-export type ImmediateRenderObjectProps = Object3DNode<THREE.ImmediateRenderObject, typeof THREE.ImmediateRenderObject>
 
 export type CameraProps = Object3DNode<THREE.Camera, typeof THREE.Camera>
 export type PerspectiveCameraProps = Object3DNode<THREE.PerspectiveCamera, typeof THREE.PerspectiveCamera>
@@ -120,10 +121,6 @@ export type OctahedronBufferGeometryProps = BufferGeometryNode<
   THREE.OctahedronBufferGeometry,
   typeof THREE.OctahedronBufferGeometry
 >
-export type ParametricBufferGeometryProps = BufferGeometryNode<
-  THREE.ParametricBufferGeometry,
-  typeof THREE.ParametricBufferGeometry
->
 export type PlaneBufferGeometryProps = BufferGeometryNode<THREE.PlaneBufferGeometry, typeof THREE.PlaneBufferGeometry>
 export type PolyhedronBufferGeometryProps = BufferGeometryNode<
   THREE.PolyhedronBufferGeometry,
@@ -139,7 +136,6 @@ export type TetrahedronBufferGeometryProps = BufferGeometryNode<
   THREE.TetrahedronBufferGeometry,
   typeof THREE.TetrahedronBufferGeometry
 >
-export type TextBufferGeometryProps = BufferGeometryNode<THREE.TextBufferGeometry, typeof THREE.TextBufferGeometry>
 export type TorusBufferGeometryProps = BufferGeometryNode<THREE.TorusBufferGeometry, typeof THREE.TorusBufferGeometry>
 export type TorusKnotBufferGeometryProps = BufferGeometryNode<
   THREE.TorusKnotBufferGeometry,
@@ -147,7 +143,6 @@ export type TorusKnotBufferGeometryProps = BufferGeometryNode<
 >
 export type TubeBufferGeometryProps = BufferGeometryNode<THREE.TubeBufferGeometry, typeof THREE.TubeBufferGeometry>
 export type WireframeGeometryProps = BufferGeometryNode<THREE.WireframeGeometry, typeof THREE.WireframeGeometry>
-export type ParametricGeometryProps = BufferGeometryNode<THREE.ParametricGeometry, typeof THREE.ParametricGeometry>
 export type TetrahedronGeometryProps = BufferGeometryNode<THREE.TetrahedronGeometry, typeof THREE.TetrahedronGeometry>
 export type OctahedronGeometryProps = BufferGeometryNode<THREE.OctahedronGeometry, typeof THREE.OctahedronGeometry>
 export type IcosahedronGeometryProps = BufferGeometryNode<THREE.IcosahedronGeometry, typeof THREE.IcosahedronGeometry>
@@ -159,7 +154,6 @@ export type PolyhedronGeometryProps = BufferGeometryNode<THREE.PolyhedronGeometr
 export type TubeGeometryProps = BufferGeometryNode<THREE.TubeGeometry, typeof THREE.TubeGeometry>
 export type TorusKnotGeometryProps = BufferGeometryNode<THREE.TorusKnotGeometry, typeof THREE.TorusKnotGeometry>
 export type TorusGeometryProps = BufferGeometryNode<THREE.TorusGeometry, typeof THREE.TorusGeometry>
-export type TextGeometryProps = BufferGeometryNode<THREE.TextGeometry, typeof THREE.TextGeometry>
 export type SphereGeometryProps = BufferGeometryNode<THREE.SphereGeometry, typeof THREE.SphereGeometry>
 export type RingGeometryProps = BufferGeometryNode<THREE.RingGeometry, typeof THREE.RingGeometry>
 export type PlaneGeometryProps = BufferGeometryNode<THREE.PlaneGeometry, typeof THREE.PlaneGeometry>
@@ -242,6 +236,15 @@ export type Matrix3Props = Node<THREE.Matrix3, typeof THREE.Matrix3>
 export type Matrix4Props = Node<THREE.Matrix4, typeof THREE.Matrix4>
 export type QuaternionProps = Node<THREE.Quaternion, typeof THREE.Quaternion>
 export type BufferAttributeProps = Node<THREE.BufferAttribute, typeof THREE.BufferAttribute>
+export type Float16BufferAttributeProps = Node<THREE.Float16BufferAttribute, typeof THREE.Float16BufferAttribute>
+export type Float32BufferAttributeProps = Node<THREE.Float32BufferAttribute, typeof THREE.Float32BufferAttribute>
+export type Float64BufferAttributeProps = Node<THREE.Float64BufferAttribute, typeof THREE.Float64BufferAttribute>
+export type Int8BufferAttributeProps = Node<THREE.Int8BufferAttribute, typeof THREE.Int8BufferAttribute>
+export type Int16BufferAttributeProps = Node<THREE.Int16BufferAttribute, typeof THREE.Int16BufferAttribute>
+export type Int32BufferAttributeProps = Node<THREE.Int32BufferAttribute, typeof THREE.Int32BufferAttribute>
+export type Uint8BufferAttributeProps = Node<THREE.Uint8BufferAttribute, typeof THREE.Uint8BufferAttribute>
+export type Uint16BufferAttributeProps = Node<THREE.Uint16BufferAttribute, typeof THREE.Uint16BufferAttribute>
+export type Uint32BufferAttributeProps = Node<THREE.Uint32BufferAttribute, typeof THREE.Uint32BufferAttribute>
 export type InstancedBufferAttributeProps = Node<THREE.InstancedBufferAttribute, typeof THREE.InstancedBufferAttribute>
 export type ColorProps = Node<THREE.Color, ColorArray>
 export type FogProps = Node<THREE.Fog, typeof THREE.Fog>
@@ -251,6 +254,8 @@ export type ShapeProps = Node<THREE.Shape, typeof THREE.Shape>
 declare global {
   namespace JSX {
     interface IntrinsicElements {
+      object3D: Object3DProps
+
       // `audio` works but conflicts with @types/react. Try using Audio from react-three-fiber/components instead
       // audio: AudioProps
       audioListener: AudioListenerProps
@@ -270,7 +275,6 @@ declare global {
       // line: LineProps
       points: PointsProps
       group: GroupProps
-      immediateRenderObject: ImmediateRenderObjectProps
 
       // cameras
       camera: CameraProps
@@ -291,19 +295,16 @@ declare global {
       icosahedronBufferGeometry: IcosahedronBufferGeometryProps
       latheBufferGeometry: LatheBufferGeometryProps
       octahedronBufferGeometry: OctahedronBufferGeometryProps
-      parametricBufferGeometry: ParametricBufferGeometryProps
       planeBufferGeometry: PlaneBufferGeometryProps
       polyhedronBufferGeometry: PolyhedronBufferGeometryProps
       ringBufferGeometry: RingBufferGeometryProps
       shapeBufferGeometry: ShapeBufferGeometryProps
       sphereBufferGeometry: SphereBufferGeometryProps
       tetrahedronBufferGeometry: TetrahedronBufferGeometryProps
-      textBufferGeometry: TextBufferGeometryProps
       torusBufferGeometry: TorusBufferGeometryProps
       torusKnotBufferGeometry: TorusKnotBufferGeometryProps
       tubeBufferGeometry: TubeBufferGeometryProps
       wireframeGeometry: WireframeGeometryProps
-      parametricGeometry: ParametricGeometryProps
       tetrahedronGeometry: TetrahedronGeometryProps
       octahedronGeometry: OctahedronGeometryProps
       icosahedronGeometry: IcosahedronGeometryProps
@@ -312,7 +313,6 @@ declare global {
       tubeGeometry: TubeGeometryProps
       torusKnotGeometry: TorusKnotGeometryProps
       torusGeometry: TorusGeometryProps
-      textGeometry: TextGeometryProps
       sphereGeometry: SphereGeometryProps
       ringGeometry: RingGeometryProps
       planeGeometry: PlaneGeometryProps
@@ -398,6 +398,15 @@ declare global {
       matrix4: Matrix4Props
       quaternion: QuaternionProps
       bufferAttribute: BufferAttributeProps
+      float16BufferAttribute: Float16BufferAttributeProps
+      float32BufferAttribute: Float32BufferAttributeProps
+      float64BufferAttribute: Float64BufferAttributeProps
+      int8BufferAttribute: Int8BufferAttributeProps
+      int16BufferAttribute: Int16BufferAttributeProps
+      int32BufferAttribute: Int32BufferAttributeProps
+      uint8BufferAttribute: Uint8BufferAttributeProps
+      uint16BufferAttribute: Uint16BufferAttributeProps
+      uint32BufferAttribute: Uint32BufferAttributeProps
       instancedBufferAttribute: InstancedBufferAttributeProps
       color: ColorProps
       fog: FogProps

@@ -1,9 +1,9 @@
 import { intersection } from 'lodash'
 import * as THREE from 'three'
 import { Object3D } from 'three'
-import type { UseStore } from 'zustand'
+import type { UseBoundStore } from 'zustand'
 import type { Instance } from './renderer'
-import type { InternalState, RootState } from './store'
+import type { RootState } from './store'
 
 export interface Intersection extends THREE.Intersection {
   /** The object that the event is being delivered to. May be an ancestor of the object that was hit. */
@@ -23,7 +23,10 @@ export interface IntersectionEvent<TSourceEvent> extends Intersection {
   ray: THREE.Ray
   camera: Camera
   stopPropagation: () => void
-  sourceEvent: TSourceEvent // deprecated
+  /**
+   * @deprecated in favour of nativeEvent. Please use that instead.
+   */
+  sourceEvent: TSourceEvent
   nativeEvent: TSourceEvent
   delta: number
   spaceX: number
@@ -34,6 +37,7 @@ export interface IntersectionEvent<TSourceEvent> extends Intersection {
 
 export type Camera = THREE.OrthographicCamera | THREE.PerspectiveCamera
 export type ThreeEvent<TEvent> = Omit<TEvent, 'target' | 'currentTarget'> & IntersectionEvent<TEvent>
+export type DomEvent = PointerEvent | MouseEvent | WheelEvent
 
 export type Events = {
   onClick: EventListener
@@ -102,6 +106,9 @@ function isAncestor(ancestor: Object3D, child: Object3D | null | undefined) {
  *
  * @param obj The object to release from, or undefined. If obj is not the captured object, nothing will happen. If obj is undefined, it will release whatever object is currently captured.
  * @param captureData The captureData for the current capture. If undefined, it will be fetched from capturedMap. (This is only included to reduce lookups.)
+/**
+ * Release pointer captures.
+ * This is called by releasePointerCapture in the API, and when an object is removed.
  */
 function releaseInternalPointerCapture(
   capturedMap: Map<number, PointerCaptureData>,
@@ -123,7 +130,7 @@ function releaseInternalPointerCapture(
   }
 }
 
-export function removeInteractivity(store: UseStore<RootState>, object: THREE.Object3D) {
+export function removeInteractivity(store: UseBoundStore<RootState>, object: THREE.Object3D) {
   const { internal } = store.getState()
   // Removes every trace of an object from the data store
   internal.interaction = internal.interaction.filter((o) => o !== object)
@@ -142,7 +149,7 @@ export function removeInteractivity(store: UseStore<RootState>, object: THREE.Ob
   })
 }
 
-export function createEvents(store: UseStore<RootState>) {
+export function createEvents(store: UseBoundStore<RootState>) {
   const temp = new THREE.Vector3()
 
   /** Sets up defaultRaycaster */
@@ -151,8 +158,12 @@ export function createEvents(store: UseStore<RootState>) {
     const { raycaster, mouse, camera, size } = state
     // https://github.com/pmndrs/react-three-fiber/pull/782
     // Events trigger outside of canvas when moved
-    const { offsetX, offsetY } = raycaster.computeOffsets?.(event, state) ?? event
-    const { width, height } = size
+    const customOffsets = raycaster.computeOffsets?.(event, state)
+    const offsetX = customOffsets?.offsetX ?? event.offsetX
+    const offsetY = customOffsets?.offsetY ?? event.offsetY
+    const width = customOffsets?.width ?? size.width
+    const height = customOffsets?.height ?? size.height
+
     mouse.set((offsetX / width) * 2 - 1, -(offsetY / height) * 2 + 1)
     raycaster.setFromCamera(mouse, camera)
   }
@@ -217,7 +228,7 @@ export function createEvents(store: UseStore<RootState>) {
     intersections: Intersection[],
     event: TEvent,
     delta: number,
-    callback: (event: ThreeEvent<TEvent>) => void,
+    callback: (event: ThreeEvent<DomEvent>) => void,
   ) {
     const { raycaster, mouse, camera, internal } = store.getState()
     // If anything has been found, forward it to the event listeners
@@ -227,7 +238,7 @@ export function createEvents(store: UseStore<RootState>) {
       const localState = { stopped: false }
 
       for (
-        let hit = intersections[0], eventPhase = event.AT_TARGET;
+        let hit = intersections[0], eventPhase: number = event.AT_TARGET;
         hit.eventObject && !localState.stopped;
         hit = { ...hit, eventObject: hit.eventObject.parent! }, eventPhase = event.BUBBLING_PHASE
       ) {
@@ -290,6 +301,8 @@ export function createEvents(store: UseStore<RootState>) {
 
         // Call subscribers
         callback(raycastEvent)
+        // Event bubbling may be interrupted by stopPropagation
+        if (localState.stopped) break
       }
     }
     return intersections
@@ -318,9 +331,9 @@ export function createEvents(store: UseStore<RootState>) {
         const handlers = instance?.handlers
         if (handlers && (handlers.onPointerOut || handlers.onPointerLeave)) {
           // Clear out intersects, they are outdated by now
-          const data: ThreeEvent<PointerEvent> = { ...hoveredEvent, eventObject, intersections: hits || [] }
-          handlers.onPointerOut?.(data)
-          handlers.onPointerLeave?.(data)
+          const data: ThreeEvent<DomEvent> = { ...hoveredEvent, eventObject, intersections: hits || [] }
+          handlers.onPointerOut?.(data as ThreeEvent<PointerEvent>)
+          handlers.onPointerLeave?.(data as ThreeEvent<PointerEvent>)
         }
       }
     }
@@ -333,9 +346,20 @@ export function createEvents(store: UseStore<RootState>) {
       case 'onPointerCancel':
         return (ev: PointerEvent) => cancelPointer(ev.pointerId, [])
       case 'onLostPointerCapture':
-        return (ev: PointerEvent) => {
-          // If the object event interface had onLostPointerCapture, we'd call it here.
-          releaseInternalPointerCapture(store.getState().internal.capturedMap, undefined, undefined, ev.pointerId)
+        return (ev: DomEvent) => {
+          const { internal } = store.getState()
+          if ('pointerId' in ev && !internal.capturedMap.has(ev.pointerId)) {
+            // If the object event interface had onLostPointerCapture, we'd call it here on every
+            // object that's getting removed.
+            internal.capturedMap.delete(ev.pointerId)
+            // If the object event interface had onLostPointerCapture, we'd call it here.
+            releaseInternalPointerCapture(
+              store.getState().internal.capturedMap,
+              undefined,
+              undefined,
+              (ev as PointerEvent).pointerId,
+            )
+          }
         }
     }
 
@@ -345,6 +369,7 @@ export function createEvents(store: UseStore<RootState>) {
 
       if (scene.autoUpdate) scene.updateMatrixWorld()
       prepareRay(event)
+      internal.lastEvent.current = event
 
       // Get fresh intersects
       const isPointerMove = name === 'onPointerMove'
@@ -379,7 +404,7 @@ export function createEvents(store: UseStore<RootState>) {
         }
       }
 
-      handleIntersects(hits, event, delta, (data: ThreeEvent<MouseEvent>) => {
+      handleIntersects(hits, event, delta, (data: ThreeEvent<DomEvent>) => {
         const eventObject = data.eventObject
         const instance = (eventObject as unknown as Instance).__r3f
         const handlers = instance?.handlers
@@ -418,6 +443,14 @@ export function createEvents(store: UseStore<RootState>) {
               )
               // Now call the handler
               handler(data as ThreeEvent<PointerEvent>)
+            }
+          } else {
+            // Trigger onPointerMissed on all elements that have pointer over/out handlers, but not click and weren't hit
+            if (isClickEvent && internal.initialHit === eventObject) {
+              pointerMissed(
+                event,
+                internal.interaction.filter((object) => internal.initialHit !== object),
+              )
             }
           }
         }

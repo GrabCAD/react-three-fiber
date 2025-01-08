@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as React from 'react'
 import { RootTag } from 'react-reconciler'
-import { UseStore } from 'zustand'
+import { UseBoundStore } from 'zustand'
 
 import { is } from '../core/is'
 import { Renderer, createStore, StoreProps, isRenderer, context, RootState, Size, calculateDpr } from '../core/store'
@@ -26,8 +26,11 @@ type GLProps =
 
 export type RenderProps<TCanvas extends Element> = Omit<StoreProps, 'gl' | 'events' | 'size'> & {
   gl?: GLProps
-  events?: (store: UseStore<RootState>) => EventManager<TCanvas>
+  events?: (store: UseBoundStore<RootState>) => EventManager<TCanvas>
   size?: Size
+  /**
+   * @deprecated Removed in R3F v8. React 18 will render in blocking mode by default and switch to concurrent via `startTransition`.
+   */
   mode?: typeof modes[number]
   onCreated?: (state: RootState) => void
 }
@@ -60,7 +63,7 @@ function render<TCanvas extends Element>(
   element: React.ReactNode,
   canvas: TCanvas,
   { gl, size, mode = modes[1], events, onCreated, ...props }: RenderProps<TCanvas> = {},
-): UseStore<RootState> {
+): UseBoundStore<RootState> {
   // Allow size to take on container bounds initially
   if (!size) {
     size = {
@@ -81,6 +84,8 @@ function render<TCanvas extends Element>(
     if (props.dpr !== undefined && !is.equ(state.viewport.dpr, calculateDpr(props.dpr))) state.setDpr(props.dpr)
     // Check size
     if (state.size.width !== size.width || state.size.height !== size.height) state.setSize(size.width, size.height)
+    // Check frameloop
+    if (state.frameloop !== props.frameloop) state.setFrameloop(props.frameloop)
 
     // For some props we want to reset the entire root
 
@@ -135,7 +140,7 @@ function Provider<TElement extends Element>({
   target,
 }: {
   onCreated?: (state: RootState) => void
-  store: UseStore<RootState>
+  store: UseBoundStore<RootState>
   element: React.ReactNode
   target: TElement
 }) {
