@@ -2158,11 +2158,11 @@ __metadata:
     scheduler: ^0.20.2
     use-asset: ^1.0.4
     utility-types: ^3.10.0
-    zustand: ^3.5.1
+    zustand: 3.5.1
   peerDependencies:
     react: ">=17.0"
     react-dom: ">=17.0"
-    three: ">=0.133"
+    three: 0.123
   peerDependenciesMeta:
     react-dom:
       optional: true
@@ -2580,13 +2580,6 @@ __metadata:
   version: 2.0.1
   resolution: "@types/stack-utils@npm:2.0.1"
   checksum: 205fdbe3326b7046d7eaf5e494d8084f2659086a266f3f9cf00bccc549c8e36e407f88168ad4383c8b07099957ad669f75f2532ed4bc70be2b037330f7bae019
-  languageName: node
-  linkType: hard
-
-"@types/three@npm:^0.130.1":
-  version: 0.130.2
-  resolution: "@types/three@npm:0.130.2"
-  checksum: 7cb2351053428424fe9d8531076cfa6572cb62216a4921770ed787676b8aedb11c41bc3e2584fc05edef0d3204b1e601b5fcb6734c49931142087bd653439dfc
   languageName: node
   linkType: hard
 
@@ -7496,7 +7489,6 @@ __metadata:
     "@types/react-dom": ^17.0.9
     "@types/react-test-renderer": ^17.0.1
     "@types/scheduler": ^0.16.2
-    "@types/three": ^0.130.1
     "@typescript-eslint/eslint-plugin": ^4.28.4
     "@typescript-eslint/parser": ^4.28.4
     eslint: ^7.31.0
@@ -7516,7 +7508,7 @@ __metadata:
     react: ^17.0.2
     react-dom: ^17.0.2
     regenerator-runtime: ^0.13.7
-    three: ^0.130.1
+    three: ^0.123.0
     three-stdlib: ^2.3.1
     ts-jest: ^27.0.3
     typescript: ^4.3.5
@@ -8513,10 +8505,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three@npm:^0.130.1":
-  version: 0.130.1
-  resolution: "three@npm:0.130.1"
-  checksum: 02208e409a261baff54644e526a91c2dd1482036c7c331ebdb555468a8c17baffccc607b8371d437ff2fe5557d028825313db2274ef35740cf93cbe16ad1e7d9
+"three@npm:^0.123.0":
+  version: 0.123.0
+  resolution: "three@npm:0.123.0"
+  checksum: aeb781cc962ab07b3eb53e0f3f1e0875b125d304ac5dfc884600979bf2b0650b5cdadf790dfaad12d613d32a2499b96514f25ba4aa72674d45cc037e7d154164
   languageName: node
   linkType: hard
 
@@ -9240,14 +9232,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zustand@npm:^3.5.1":
-  version: 3.7.1
-  resolution: "zustand@npm:3.7.1"
+"zustand@npm:3.5.1":
+  version: 3.5.1
+  resolution: "zustand@npm:3.5.1"
   peerDependencies:
     react: ">=16.8"
-  peerDependenciesMeta:
-    react:
-      optional: true
-  checksum: 987a2cee95e0fd085c3556d21289a34bb1e9727155837c480617dee839453858523d6321abf3b18de4867fb07d14f5ff7abf9a8404357baa7ec73dffec6dd4f7
+  checksum: 3df791088265ca2ae6168a7b0ebda0221b89e693ba38bbd7e9a084bc7eb56d0918bbbec9937f800b406c0f03e871a9526e190409c37171e19bf912e4afe214a5
   languageName: node
   linkType: hard

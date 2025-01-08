@@ -18,4 +18,4 @@ coverage/
 yarn-error.log
 .size-snapshot.json
 __tests__/__image_snapshots__/__diff_output__
-.yarn/cache
+.yarn

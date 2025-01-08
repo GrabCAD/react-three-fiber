@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import * as React from 'react'
 import * as ReactThreeFiber from '../three-types'
-import create, { GetState, SetState, UseBoundStore } from 'zustand'
+import create, { GetState, SetState, UseStore } from 'zustand'
 import { prepare, Instance, InstanceProps } from './renderer'
 import { DomEvent, EventManager, PointerCaptureData, ThreeEvent } from './events'
 
-export interface IIntersection extends THREE.Intersection {
+export interface Intersection extends THREE.Intersection {
   eventObject: THREE.Object3D
 }
 
@@ -145,14 +145,14 @@ export function calculateDpr(dpr: Dpr) {
   return Array.isArray(dpr) ? Math.min(Math.max(dpr[0], window.devicePixelRatio), dpr[1]) : dpr
 }
 
-const context = React.createContext<UseBoundStore<RootState>>(null!)
+const context = React.createContext<UseStore<RootState>>(null!)
 
 const createStore = (
   applyProps: ApplyProps,
   invalidate: (state?: RootState) => void,
   advance: (timestamp: number, runGlobalEffects?: boolean, state?: RootState) => void,
   props: StoreProps,
-): UseBoundStore<RootState> => {
+): UseStore<RootState> => {
   const {
     gl,
     size,

@@ -4,7 +4,7 @@ import * as ReactThreeFiber from './three-types'
 export { ReactThreeFiber }
 export type { BaseInstance, LocalState } from './core/renderer'
 export type {
-  IIntersection as Intersection,
+  Intersection,
   Subscription,
   Dpr,
   Size,
