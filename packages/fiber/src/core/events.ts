@@ -227,7 +227,7 @@ export function createEvents(store: UseStore<RootState>) {
       const localState = { stopped: false }
 
       for (
-        let hit = intersections[0], eventPhase = event.AT_TARGET;
+        let hit = intersections[0], eventPhase: number = event.AT_TARGET;
         hit.eventObject && !localState.stopped;
         hit = { ...hit, eventObject: hit.eventObject.parent! }, eventPhase = event.BUBBLING_PHASE
       ) {
@@ -349,7 +349,7 @@ export function createEvents(store: UseStore<RootState>) {
       // Get fresh intersects
       const isPointerMove = name === 'onPointerMove'
       const isClickEvent = name === 'onClick' || name === 'onContextMenu' || name === 'onDoubleClick'
-      const hits = patchIntersects(intersect(), event)
+      const hits = isClickEvent ? intersect() : patchIntersects(intersect(), event)
       const delta = isClickEvent ? calculateDistance(event) : 0
 
       // Save initial coordinates on pointer-down
