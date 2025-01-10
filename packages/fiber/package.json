@@ -1,6 +1,6 @@
 {
   "name": "@react-three/fiber",
-  "version": "7.0.29-eagle.1",
+  "version": "7.0.29-eagle.12",
   "description": "A React renderer for Threejs",
   "keywords": [
     "react",
@@ -47,7 +47,7 @@
   "peerDependencies": {
     "react": ">=17.0",
     "react-dom": ">=17.0",
-    "three": ">=0.126"
+    "three": ">=0.133"
   },
   "peerDependenciesMeta": {
     "react-dom": {
